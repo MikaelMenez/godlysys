@@ -1,0 +1,25 @@
+# Rust/Cargo
+target/
+Cargo.lock
+
+# Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+app.db
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# IDEs/Editores
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# Logs e temporários
+*.log
+tmp/
+temp/

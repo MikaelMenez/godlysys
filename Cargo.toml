@@ -1,0 +1,10 @@
+[package]
+name = "igreja"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite"] }
+axum = "0.8.8"
+serde = {version="1.0.228",features=["derive"]}
+tokio = {version="1.48.0",features=["rt-multi-thread"]}
