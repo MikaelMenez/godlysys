@@ -9,6 +9,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(igreja::index))
         .route("/add_member", post(igreja::add_member))
+        .route("/members", get(igreja::get_members))
         .with_state(pool);
     let addr = "0.0.0.0:3000";
     let adress = addr.strip_prefix("0.0.0.0:").unwrap();

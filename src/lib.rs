@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, response::IntoResponse};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
 use sqlx::{FromRow, SqlitePool};
 pub async fn create_table_members(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     sqlx::query!(
@@ -18,6 +18,20 @@ pub async fn create_table_members(pool: &SqlitePool) -> Result<(), sqlx::Error> 
     .execute(pool)
     .await?;
     Ok(())
+}
+pub async fn get_members(
+    State(pool): State<SqlitePool>,
+) -> Result<Json<Vec<Member>>, (StatusCode, String)> {
+    let members = sqlx::query_as!(Member, "SELECT * FROM members")
+        .fetch_all(&pool)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Erro ao buscar membros {}", e),
+            )
+        })?;
+    Ok(Json(members))
 }
 pub async fn insert_members(pool: &SqlitePool, membro: &Member) -> Result<(), sqlx::Error> {
     create_table_members(pool).await?;
@@ -68,9 +82,9 @@ pub async fn add_member(
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, FromRow)]
 pub struct Member {
-    id: Option<i32>,
+    id: Option<i64>,
     nome: String,
-    idade: u32,
+    idade: i64,
     email: String,
     genero: String,
     celular: String,
