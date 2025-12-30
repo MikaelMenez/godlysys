@@ -1,5 +1,52 @@
-use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use sqlx::{FromRow, SqlitePool};
+pub async fn put_members(pool: &SqlitePool, membro: &Member) -> Result<(), sqlx::Error> {
+    create_table_members(pool).await?;
+    let member = membro;
+    sqlx::query!(
+        r#"
+           UPDATE members
+           SET nome = ?, idade= ?, email= ?, genero= ?, celular= ?,estado_civil= ?,endereco= ?
+           WHERE id = ?
+           "#,
+        member.nome,
+        member.idade,
+        member.email,
+        member.genero,
+        member.celular,
+        member.estado_civil,
+        member.endereco,
+        member.id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+pub async fn modify_members(
+    State(pool): State<SqlitePool>,
+    Path(path): Path<i64>,
+    Json(mut membro): Json<Member>,
+) -> impl IntoResponse {
+    if let Err(e) = create_table_members(&pool).await {
+        return format!("Erro no banco de dados {}", e).into_response();
+    }
+    membro.id = Some(path);
+    match put_members(&pool, &membro).await {
+        Ok(_) => axum::http::StatusCode::CREATED.into_response(),
+
+        Err(e) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao criar membro: {}", e),
+        )
+            .into_response(),
+    }
+}
+
 pub async fn create_table_members(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
