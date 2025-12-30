@@ -27,6 +27,36 @@ pub async fn put_members(pool: &SqlitePool, membro: &Member) -> Result<(), sqlx:
     .await?;
     Ok(())
 }
+pub async fn delete_members(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
+    create_table_members(pool).await?;
+    sqlx::query!(
+        r#"
+        DELETE FROM members WHERE id = ?
+           "#,
+        id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+pub async fn del_members(
+    State(pool): State<SqlitePool>,
+    Path(path): Path<i64>,
+) -> impl IntoResponse {
+    if let Err(e) = create_table_members(&pool).await {
+        return format!("Erro no banco de dados {}", e).into_response();
+    }
+    match delete_members(&pool, path).await {
+        Ok(_) => axum::http::StatusCode::CREATED.into_response(),
+
+        Err(e) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao criar membro: {}", e),
+        )
+            .into_response(),
+    }
+}
+
 pub async fn modify_members(
     State(pool): State<SqlitePool>,
     Path(path): Path<i64>,
@@ -127,6 +157,7 @@ pub async fn add_member(
 }
 
 use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug, FromRow)]
 pub struct Member {
     id: Option<i64>,
